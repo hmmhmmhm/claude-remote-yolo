@@ -4,6 +4,20 @@
   "description": "Claude CLI wrapper for remote-control bypass mode with persisted safe or yolo preferences.",
   "license": "MIT",
   "packageManager": "pnpm@9.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hmmhmmhm/claude-remote-yolo.git"
+  },
+  "homepage": "https://github.com/hmmhmmhm/claude-remote-yolo#readme",
+  "bugs": {
+    "url": "https://github.com/hmmhmmhm/claude-remote-yolo/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "bin": {
     "claude-remote-yolo": "./dist/bin.js"
   },
@@ -16,6 +30,7 @@
     "check:file-lines": "node tools/check-file-lines.mjs",
     "lint": "eslint . --max-warnings 0",
     "prepare": "simple-git-hooks && pnpm run build",
+    "prepublishOnly": "pnpm run check",
     "start": "node dist/bin.js",
     "test": "vitest run --coverage"
   },

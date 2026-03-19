@@ -2,6 +2,16 @@
 
 A TypeScript wrapper around the Claude CLI for a persisted safe or yolo workflow.
 
+## Installation
+
+Install the package globally:
+
+```bash
+npm install -g claude-remote-yolo
+```
+
+This wrapper expects the `claude` CLI to be available on your system.
+
 ## Usage
 
 Default yolo mode runs this command shape:
@@ -21,6 +31,12 @@ claude-remote-yolo --yolo "summarize this repository"
 ```
 
 Yolo mode asks for consent once before it first runs the bypass command and stores that decision in a local state file under the user's home directory.
+
+The saved state file is:
+
+```bash
+~/.claude-remote-yolo-state.json
+```
 
 ## Local Development
 
