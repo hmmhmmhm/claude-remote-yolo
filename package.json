@@ -1,0 +1,42 @@
+{
+  "name": "claude-remote-yolo",
+  "version": "0.1.0",
+  "description": "Run Claude Code remote mode in YOLO mode.",
+  "license": "MIT",
+  "packageManager": "pnpm@9.0.0",
+  "bin": {
+    "claude-remote-yolo": "./dist/bin.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/bin.ts --format cjs --target node20 --out-dir dist --clean",
+    "check": "pnpm run check:file-lines && pnpm run lint && pnpm run test && pnpm run build",
+    "check:file-lines": "node tools/check-file-lines.mjs",
+    "lint": "eslint . --max-warnings 0",
+    "prepare": "simple-git-hooks && pnpm run build",
+    "start": "node dist/bin.js",
+    "test": "vitest run --coverage"
+  },
+  "keywords": [
+    "cli",
+    "typescript",
+    "claude"
+  ],
+  "devDependencies": {
+    "@eslint/js": "^9.23.0",
+    "@types/node": "^24.6.0",
+    "@vitest/coverage-v8": "^3.2.4",
+    "eslint": "^9.23.0",
+    "globals": "^16.0.0",
+    "simple-git-hooks": "^2.13.0",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.28.0",
+    "vitest": "^3.2.4"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm check"
+  }
+}
