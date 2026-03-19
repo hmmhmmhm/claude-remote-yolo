@@ -1,7 +1,7 @@
 {
   "name": "claude-remote-yolo",
   "version": "0.1.0",
-  "description": "Run Claude Code remote mode in YOLO mode.",
+  "description": "Claude CLI wrapper for remote-control bypass mode with persisted safe or yolo preferences.",
   "license": "MIT",
   "packageManager": "pnpm@9.0.0",
   "bin": {
@@ -22,7 +22,9 @@
   "keywords": [
     "cli",
     "typescript",
-    "claude"
+    "claude",
+    "remote-control",
+    "permissions"
   ],
   "devDependencies": {
     "@eslint/js": "^9.23.0",
