@@ -73,16 +73,50 @@ export function buildClaudeArguments(mode: Mode, args: string[]): string[] {
   ];
 }
 
+export function buildCommandInvocation(
+  mode: Mode,
+  args: string[],
+  platform: NodeJS.Platform
+): {
+  args: string[];
+  command: string;
+  options: { shell: boolean; stdio: "inherit" };
+} {
+  const claudeArgs = buildClaudeArguments(mode, args);
+
+  if (platform === "win32") {
+    return {
+      args: ["/d", "/s", "/c", "claude.cmd", ...claudeArgs],
+      command: "cmd.exe",
+      options: {
+        shell: false,
+        stdio: "inherit"
+      }
+    };
+  }
+
+  return {
+    args: claudeArgs,
+    command: "claude",
+    options: {
+      shell: false,
+      stdio: "inherit"
+    }
+  };
+}
+
 export function runClaudeCommand(
   mode: Mode,
   args: string[],
   runner: SpawnRunner = spawnSync,
   platform: NodeJS.Platform = process.platform
 ): number {
-  const result = runner("claude", buildClaudeArguments(mode, args), {
-    shell: platform === "win32",
-    stdio: "inherit"
-  });
+  const invocation = buildCommandInvocation(mode, args, platform);
+  const result = runner(
+    invocation.command,
+    invocation.args,
+    invocation.options
+  );
 
   if (result.error) {
     throw result.error;

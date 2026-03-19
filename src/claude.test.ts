@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import {
+  buildCommandInvocation,
   buildClaudeArguments,
   runClaudeCommand,
   stripWrapperFlags
@@ -50,9 +51,44 @@ describe("claude", () => {
     const runner = vi.fn(() => ({ status: 7 }));
 
     expect(runClaudeCommand("safe", ["task"], runner, "win32")).toBe(7);
-    expect(runner).toHaveBeenCalledWith("claude", ["task"], {
-      shell: true,
-      stdio: "inherit"
+    expect(runner).toHaveBeenCalledWith(
+      "cmd.exe",
+      ["/d", "/s", "/c", "claude.cmd", "task"],
+      {
+        shell: false,
+        stdio: "inherit"
+      }
+    );
+  });
+
+  it("builds a direct claude invocation on non-Windows platforms", () => {
+    expect(buildCommandInvocation("safe", ["task"], "linux")).toEqual({
+      args: ["task"],
+      command: "claude",
+      options: {
+        shell: false,
+        stdio: "inherit"
+      }
+    });
+  });
+
+  it("builds a cmd.exe invocation on Windows", () => {
+    expect(buildCommandInvocation("yolo", ["task"], "win32")).toEqual({
+      args: [
+        "/d",
+        "/s",
+        "/c",
+        "claude.cmd",
+        "remote-control",
+        "--permission-mode",
+        "bypassPermissions",
+        "task"
+      ],
+      command: "cmd.exe",
+      options: {
+        shell: false,
+        stdio: "inherit"
+      }
     });
   });
 
