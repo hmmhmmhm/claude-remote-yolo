@@ -1,9 +1,5 @@
 import { spawnSync } from "node:child_process";
 
-import type { Mode } from "./state";
-
-export type ModeOverride = Mode | undefined;
-
 export type SpawnRunner = (
   command: string,
   args: string[],
@@ -13,28 +9,8 @@ export type SpawnRunner = (
   status: number | null;
 };
 
-export function stripWrapperFlags(args: string[]): {
-  modeOverride: ModeOverride;
-  passthroughArgs: string[];
-} {
-  let modeOverride: ModeOverride;
-  const passthroughArgs: string[] = [];
-
-  for (const arg of args) {
-    if (arg === "--safe" || arg === "--no-yolo") {
-      modeOverride = "safe";
-      continue;
-    }
-
-    if (arg === "--yolo") {
-      modeOverride = "yolo";
-      continue;
-    }
-
-    passthroughArgs.push(arg);
-  }
-
-  return { modeOverride, passthroughArgs };
+export function stripWrapperFlags(args: string[]): string[] {
+  return args.filter((arg) => arg !== "--yolo");
 }
 
 function removePermissionMode(args: string[]): string[] {
@@ -54,11 +30,7 @@ function removePermissionMode(args: string[]): string[] {
   return normalizedArgs;
 }
 
-export function buildClaudeArguments(mode: Mode, args: string[]): string[] {
-  if (mode === "safe") {
-    return [...args];
-  }
-
+export function buildClaudeArguments(args: string[]): string[] {
   const normalizedArgs = removePermissionMode(args);
   const passthroughArgs =
     normalizedArgs[0] === "remote-control"
@@ -74,7 +46,6 @@ export function buildClaudeArguments(mode: Mode, args: string[]): string[] {
 }
 
 export function buildCommandInvocation(
-  mode: Mode,
   args: string[],
   platform: NodeJS.Platform
 ): {
@@ -82,7 +53,7 @@ export function buildCommandInvocation(
   command: string;
   options: { shell: boolean; stdio: "inherit" };
 } {
-  const claudeArgs = buildClaudeArguments(mode, args);
+  const claudeArgs = buildClaudeArguments(args);
 
   if (platform === "win32") {
     return {
@@ -106,12 +77,11 @@ export function buildCommandInvocation(
 }
 
 export function runClaudeCommand(
-  mode: Mode,
   args: string[],
   runner: SpawnRunner = spawnSync,
   platform: NodeJS.Platform = process.platform
 ): number {
-  const invocation = buildCommandInvocation(mode, args, platform);
+  const invocation = buildCommandInvocation(args, platform);
   const result = runner(
     invocation.command,
     invocation.args,

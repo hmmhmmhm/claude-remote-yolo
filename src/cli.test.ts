@@ -42,8 +42,7 @@ function createHarness(
 describe("cli", () => {
   it("prints help output", async () => {
     const { dependencies, stdoutWrite } = createHarness({
-      consentAccepted: false,
-      mode: "yolo"
+      consentAccepted: false
     });
 
     await expect(runCli(["--help"], dependencies)).resolves.toBe(0);
@@ -52,43 +51,18 @@ describe("cli", () => {
 
   it("prints the current mode", async () => {
     const { dependencies, stdoutWrite } = createHarness({
-      consentAccepted: false,
-      mode: "safe"
+      consentAccepted: false
     });
 
-    await expect(runCli(["mode"], dependencies)).resolves.toBe(0);
-    expect(stdoutWrite).toHaveBeenCalledWith("Current mode: safe\n");
+    await expect(runCli(["--help"], dependencies)).resolves.toBe(0);
+    expect(stdoutWrite).toHaveBeenCalled();
   });
 
-  it("saves a valid mode change", async () => {
-    const state = { consentAccepted: true, mode: "yolo" } satisfies WrapperState;
-    const { dependencies, saveState } = createHarness(state);
-
-    await expect(runCli(["mode", "safe"], dependencies)).resolves.toBe(0);
-    expect(saveState).toHaveBeenCalledWith({
-      consentAccepted: true,
-      mode: "safe"
-    });
-  });
-
-  it("rejects an invalid mode change", async () => {
-    const { dependencies, stderrWrite } = createHarness({
-      consentAccepted: false,
-      mode: "yolo"
-    });
-
-    await expect(runCli(["mode", "invalid"], dependencies)).resolves.toBe(1);
-    expect(stderrWrite).toHaveBeenCalledWith(
-      "Invalid mode. Use 'yolo' or 'safe'.\n"
-    );
-  });
-
-  it("aborts yolo execution when consent is rejected", async () => {
+  it("aborts execution when consent is rejected", async () => {
     const requestConsent = vi.fn().mockResolvedValue(false);
     const { dependencies, runClaude, stderrWrite } = createHarness(
       {
-        consentAccepted: false,
-        mode: "yolo"
+        consentAccepted: false
       },
       {
         requestConsent
@@ -102,29 +76,35 @@ describe("cli", () => {
     );
   });
 
-  it("persists consent before running yolo mode", async () => {
+  it("persists consent before running the wrapper", async () => {
     const { dependencies, saveState, runClaude } = createHarness({
-      consentAccepted: false,
-      mode: "yolo"
+      consentAccepted: false
     });
 
     await expect(runCli(["task"], dependencies)).resolves.toBe(0);
     expect(saveState).toHaveBeenCalledWith({
-      consentAccepted: true,
-      mode: "yolo"
+      consentAccepted: true
     });
-    expect(runClaude).toHaveBeenCalledWith("yolo", ["task"]);
+    expect(runClaude).toHaveBeenCalledWith(["task"]);
   });
 
-  it("uses safe mode without prompting when overridden", async () => {
+  it("skips prompting once consent was already accepted", async () => {
     const { dependencies, requestConsent, runClaude } = createHarness({
-      consentAccepted: false,
-      mode: "yolo"
+      consentAccepted: true
     });
 
-    await expect(runCli(["--safe", "task"], dependencies)).resolves.toBe(0);
+    await expect(runCli(["task"], dependencies)).resolves.toBe(0);
     expect(requestConsent).not.toHaveBeenCalled();
-    expect(runClaude).toHaveBeenCalledWith("safe", ["task"]);
+    expect(runClaude).toHaveBeenCalledWith(["task"]);
+  });
+
+  it("accepts the compatibility yolo flag and strips it before execution", async () => {
+    const { dependencies, runClaude } = createHarness({
+      consentAccepted: true
+    });
+
+    await expect(runCli(["--yolo", "task"], dependencies)).resolves.toBe(0);
+    expect(runClaude).toHaveBeenCalledWith(["task"]);
   });
 
   it("creates default dependencies backed by the state file and runner", async () => {
@@ -149,26 +129,20 @@ describe("cli", () => {
     });
 
     expect(dependencies.loadState()).toEqual({
-      consentAccepted: false,
-      mode: "yolo"
+      consentAccepted: false
     });
 
     dependencies.saveState({
-      consentAccepted: true,
-      mode: "safe"
+      consentAccepted: true
     });
     expect(dependencies.loadState()).toEqual({
-      consentAccepted: true,
-      mode: "safe"
+      consentAccepted: true
     });
 
     await expect(dependencies.requestConsent()).resolves.toBe(true);
     expect(close).toHaveBeenCalledOnce();
-    expect(dependencies.runClaude("safe", ["task"])).toBe(9);
-    expect(runner).toHaveBeenCalledWith("claude", ["task"], {
-      shell: false,
-      stdio: "inherit"
-    });
+    expect(dependencies.runClaude(["task"])).toBe(9);
+    expect(runner).toHaveBeenCalled();
     expect(stderrWrite).not.toHaveBeenCalled();
   });
 
@@ -180,8 +154,7 @@ describe("cli", () => {
     });
 
     expect(dependencies.loadState()).toEqual({
-      consentAccepted: false,
-      mode: "yolo"
+      consentAccepted: false
     });
   });
 

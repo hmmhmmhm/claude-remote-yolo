@@ -8,22 +8,15 @@ import {
 } from "./claude";
 
 describe("claude", () => {
-  it("extracts wrapper flags and preserves passthrough arguments", () => {
-    expect(stripWrapperFlags(["--safe", "prompt", "--yolo", "extra"])).toEqual({
-      modeOverride: "yolo",
-      passthroughArgs: ["prompt", "extra"]
-    });
-  });
-
-  it("passes arguments through unchanged in safe mode", () => {
-    expect(buildClaudeArguments("safe", ["task", "--json"])).toEqual([
-      "task",
-      "--json"
+  it("strips the compatibility yolo flag", () => {
+    expect(stripWrapperFlags(["--yolo", "prompt", "extra"])).toEqual([
+      "prompt",
+      "extra"
     ]);
   });
 
-  it("builds the remote-control bypass command in yolo mode", () => {
-    expect(buildClaudeArguments("yolo", ["do work"])).toEqual([
+  it("builds the remote-control bypass command", () => {
+    expect(buildClaudeArguments(["do work"])).toEqual([
       "remote-control",
       "--permission-mode",
       "bypassPermissions",
@@ -32,14 +25,12 @@ describe("claude", () => {
   });
 
   it("normalizes existing remote-control invocations", () => {
-    expect(
-      buildClaudeArguments("yolo", [
-        "remote-control",
-        "--permission-mode",
-        "default",
-        "task"
-      ])
-    ).toEqual([
+    expect(buildClaudeArguments([
+      "remote-control",
+      "--permission-mode",
+      "default",
+      "task"
+    ])).toEqual([
       "remote-control",
       "--permission-mode",
       "bypassPermissions",
@@ -47,13 +38,22 @@ describe("claude", () => {
     ]);
   });
 
-  it("runs claude with shell enabled on Windows", () => {
+  it("runs remote-control bypass mode on Windows", () => {
     const runner = vi.fn(() => ({ status: 7 }));
 
-    expect(runClaudeCommand("safe", ["task"], runner, "win32")).toBe(7);
+    expect(runClaudeCommand(["task"], runner, "win32")).toBe(7);
     expect(runner).toHaveBeenCalledWith(
       "cmd.exe",
-      ["/d", "/s", "/c", "claude.cmd", "task"],
+      [
+        "/d",
+        "/s",
+        "/c",
+        "claude.cmd",
+        "remote-control",
+        "--permission-mode",
+        "bypassPermissions",
+        "task"
+      ],
       {
         shell: false,
         stdio: "inherit"
@@ -62,8 +62,8 @@ describe("claude", () => {
   });
 
   it("builds a direct claude invocation on non-Windows platforms", () => {
-    expect(buildCommandInvocation("safe", ["task"], "linux")).toEqual({
-      args: ["task"],
+    expect(buildCommandInvocation(["task"], "linux")).toEqual({
+      args: ["remote-control", "--permission-mode", "bypassPermissions", "task"],
       command: "claude",
       options: {
         shell: false,
@@ -73,7 +73,7 @@ describe("claude", () => {
   });
 
   it("builds a cmd.exe invocation on Windows", () => {
-    expect(buildCommandInvocation("yolo", ["task"], "win32")).toEqual({
+    expect(buildCommandInvocation(["task"], "win32")).toEqual({
       args: [
         "/d",
         "/s",
@@ -96,7 +96,7 @@ describe("claude", () => {
     const failure = new Error("spawn failed");
     const runner = vi.fn(() => ({ error: failure, status: null }));
 
-    expect(() => runClaudeCommand("safe", ["task"], runner, "linux")).toThrow(
+    expect(() => runClaudeCommand(["task"], runner, "linux")).toThrow(
       "spawn failed"
     );
   });
@@ -104,6 +104,6 @@ describe("claude", () => {
   it("falls back to exit code zero when the runner returns a null status", () => {
     const runner = vi.fn(() => ({ status: null }));
 
-    expect(runClaudeCommand("safe", ["task"], runner, "linux")).toBe(0);
+    expect(runClaudeCommand(["task"], runner, "linux")).toBe(0);
   });
 });

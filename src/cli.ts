@@ -4,23 +4,13 @@ import {
   type QuestionSessionFactory,
   type WriteLike
 } from "./consent";
-import {
-  runClaudeCommand,
-  stripWrapperFlags,
-  type SpawnRunner
-} from "./claude";
-import {
-  readState,
-  resolveStateFilePath,
-  writeState,
-  type Mode,
-  type WrapperState
-} from "./state";
+import { runClaudeCommand, stripWrapperFlags, type SpawnRunner } from "./claude";
+import { readState, resolveStateFilePath, writeState, type WrapperState } from "./state";
 
 export type CliDependencies = {
   loadState(): WrapperState;
   requestConsent(): Promise<boolean>;
-  runClaude(mode: Mode, args: string[]): number;
+  runClaude(args: string[]): number;
   saveState(state: WrapperState): void;
   stderr: WriteLike;
   stdout: WriteLike;
@@ -41,42 +31,13 @@ function writeLine(output: WriteLike, message: string): void {
 }
 
 function printHelp(output: WriteLike): void {
-  writeLine(output, "Usage: claude-remote-yolo [mode [yolo|safe]] [options]");
+  writeLine(output, "Usage: claude-remote-yolo [options]");
   writeLine(output, "");
-  writeLine(output, "Default yolo execution wraps:");
+  writeLine(output, "Execution always wraps:");
   writeLine(output, "claude remote-control --permission-mode bypassPermissions");
   writeLine(output, "");
   writeLine(output, "Wrapper flags:");
-  writeLine(output, "--safe, --no-yolo   Run plain claude for this invocation");
-  writeLine(output, "--yolo              Force bypass mode for this invocation");
-  writeLine(output, "mode                Show the saved default mode");
-  writeLine(output, "mode yolo|safe      Save the default mode");
-}
-
-function handleModeCommand(
-  args: string[],
-  state: WrapperState,
-  dependencies: CliDependencies
-): number {
-  const nextMode = args[1];
-
-  if (nextMode === undefined) {
-    writeLine(dependencies.stdout, `Current mode: ${state.mode}`);
-    return 0;
-  }
-
-  if (nextMode !== "safe" && nextMode !== "yolo") {
-    writeLine(dependencies.stderr, "Invalid mode. Use 'yolo' or 'safe'.");
-    return 1;
-  }
-
-  dependencies.saveState({
-    ...state,
-    mode: nextMode
-  });
-  writeLine(dependencies.stdout, `Saved mode: ${nextMode}`);
-
-  return 0;
+  writeLine(output, "--yolo              Accepted for compatibility and ignored");
 }
 
 export function createDefaultCliDependencies(
@@ -96,8 +57,8 @@ export function createDefaultCliDependencies(
     requestConsent() {
       return promptForConsent(questionSessionFactory(input, stdout), stdout);
     },
-    runClaude(mode: Mode, args: string[]) {
-      return runClaudeCommand(mode, args, options.runner, options.platform);
+    runClaude(args: string[]) {
+      return runClaudeCommand(args, options.runner, options.platform);
     },
     saveState(state: WrapperState) {
       writeState(stateFilePath, state);
@@ -118,14 +79,9 @@ export async function runCli(
     return 0;
   }
 
-  if (args[0] === "mode") {
-    return handleModeCommand(args, state, dependencies);
-  }
+  const passthroughArgs = stripWrapperFlags(args);
 
-  const { modeOverride, passthroughArgs } = stripWrapperFlags(args);
-  const mode = modeOverride ?? state.mode;
-
-  if (mode === "yolo" && !state.consentAccepted) {
+  if (!state.consentAccepted) {
     const consentAccepted = await dependencies.requestConsent();
 
     if (!consentAccepted) {
@@ -139,5 +95,5 @@ export async function runCli(
     });
   }
 
-  return dependencies.runClaude(mode, passthroughArgs);
+  return dependencies.runClaude(passthroughArgs);
 }

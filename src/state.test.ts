@@ -20,25 +20,13 @@ describe("state", () => {
   });
 
   it("parses valid persisted state", () => {
-    expect(
-      parseState(JSON.stringify({ consentAccepted: true, mode: "safe" }))
-    ).toEqual({
-      consentAccepted: true,
-      mode: "safe"
+    expect(parseState(JSON.stringify({ consentAccepted: true }))).toEqual({
+      consentAccepted: true
     });
   });
 
   it("falls back to the default state for invalid content", () => {
     expect(parseState("not-json")).toEqual(DEFAULT_STATE);
-  });
-
-  it("falls back to yolo mode when the stored mode is not recognized", () => {
-    expect(
-      parseState(JSON.stringify({ consentAccepted: true, mode: "invalid" }))
-    ).toEqual({
-      consentAccepted: true,
-      mode: "yolo"
-    });
   });
 
   it("returns the default state when the file does not exist", () => {
@@ -53,17 +41,14 @@ describe("state", () => {
     const stateFilePath = path.join(tempDirectory, "state.json");
 
     writeState(stateFilePath, {
-      consentAccepted: true,
-      mode: "safe"
+      consentAccepted: true
     });
 
     expect(JSON.parse(readFileSync(stateFilePath, "utf8"))).toEqual({
-      consentAccepted: true,
-      mode: "safe"
+      consentAccepted: true
     });
     expect(readState(stateFilePath)).toEqual({
-      consentAccepted: true,
-      mode: "safe"
+      consentAccepted: true
     });
   });
 });

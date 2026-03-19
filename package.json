@@ -1,6 +1,6 @@
 {
   "name": "claude-remote-yolo",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Claude CLI wrapper for remote-control bypass mode with persisted safe or yolo preferences.",
   "license": "MIT",
   "packageManager": "pnpm@9.0.0",

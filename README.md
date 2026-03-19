@@ -1,6 +1,6 @@
 # claude-remote-yolo
 
-A TypeScript wrapper around the Claude CLI for a persisted safe or yolo workflow.
+A TypeScript wrapper around the Claude CLI that always runs remote-control with bypass permissions.
 
 ## Installation
 
@@ -14,23 +14,20 @@ This wrapper expects the `claude` CLI to be available on your system.
 
 ## Usage
 
-Default yolo mode runs this command shape:
+This wrapper always runs this command shape:
 
 ```bash
 claude remote-control --permission-mode bypassPermissions
 ```
 
-The wrapper keeps a saved mode and supports temporary overrides:
+Examples:
 
 ```bash
-claude-remote-yolo mode
-claude-remote-yolo mode yolo
-claude-remote-yolo mode safe
-claude-remote-yolo --safe
 claude-remote-yolo --yolo "summarize this repository"
+claude-remote-yolo "summarize this repository"
 ```
 
-Yolo mode asks for consent once before it first runs the bypass command and stores that decision in a local state file under the user's home directory.
+The wrapper asks for consent once before it first runs the bypass command and stores that decision in a local state file under the user's home directory.
 
 The saved state file is:
 
@@ -43,15 +40,14 @@ The saved state file is:
 ```bash
 pnpm install
 pnpm check
-node dist/bin.js mode
-node dist/bin.js --yolo "summarize this repository"
+node dist/bin.js "summarize this repository"
 ```
 
 ## Design Notes
 
 - This project intentionally wraps the public Claude CLI command instead of patching Claude's installed source files.
-- Safe mode forwards arguments directly to `claude`.
-- Yolo mode normalizes execution to `claude remote-control --permission-mode bypassPermissions`.
+- Execution is always normalized to `claude remote-control --permission-mode bypassPermissions`.
+- `--yolo` is accepted as a compatibility flag and ignored.
 
 ## Quality Gates
 
