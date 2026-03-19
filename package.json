@@ -19,7 +19,7 @@
     "access": "public"
   },
   "bin": {
-    "claude-remote-yolo": "./dist/bin.js"
+    "claude-remote-yolo": "dist/bin.js"
   },
   "files": [
     "dist"
