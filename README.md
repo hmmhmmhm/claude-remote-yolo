@@ -1,58 +1,124 @@
-# claude-remote-yolo
+<div align="center">
+
+# CRY (Claude Remote YOLO)
 
 A TypeScript wrapper around the Claude CLI that always runs remote-control with bypass permissions.
 
-## Installation
+[![npm version](https://img.shields.io/npm/v/claude-remote-yolo)](https://www.npmjs.com/package/claude-remote-yolo)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D20-brightgreen)](https://nodejs.org)
+[![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)]()
 
-Install the package globally:
+</div>
 
-```bash
-npm install -g claude-remote-yolo
-```
+## What it does
 
-This wrapper expects the `claude` CLI to be available on your system.
-
-## Usage
-
-This wrapper always runs this command shape:
+Every invocation is normalized to:
 
 ```bash
 claude remote-control --permission-mode bypassPermissions
 ```
 
-Examples:
+On first run, the wrapper asks for consent once and persists the decision to `~/.claude-remote-yolo-state.json`.
+
+## Installation
+
+> **Prerequisite:** The `claude` CLI must be available on your system.
+
+### Global install
 
 ```bash
-claude-remote-yolo --yolo "summarize this repository"
+# npm
+npm install -g claude-remote-yolo
+
+# pnpm
+pnpm add -g claude-remote-yolo
+```
+
+### Run directly with npx
+
+```bash
+npx claude-remote-yolo "summarize this repository"
+```
+
+## Usage
+
+```bash
+# Basic usage
 claude-remote-yolo "summarize this repository"
+
+# With --yolo flag (accepted for compatibility, ignored)
+claude-remote-yolo --yolo "summarize this repository"
+
+# Help
+claude-remote-yolo --help
 ```
 
-The wrapper asks for consent once before it first runs the bypass command and stores that decision in a local state file under the user's home directory.
+### Alias — Run with `cry`
 
-The saved state file is:
+After installing globally, you can register a `cry` alias for quick access.
+
+#### macOS / Linux
+
+Add an alias to your shell config:
 
 ```bash
-~/.claude-remote-yolo-state.json
+# Bash
+echo 'alias cry="claude-remote-yolo"' >> ~/.bashrc && source ~/.bashrc
+
+# Zsh
+echo 'alias cry="claude-remote-yolo"' >> ~/.zshrc && source ~/.zshrc
 ```
 
-## Local Development
+#### Windows (PowerShell)
+
+Add a function to your PowerShell profile:
+
+```powershell
+# Create profile if it doesn't exist
+if (!(Test-Path -Path $PROFILE)) { New-Item -ItemType File -Path $PROFILE -Force }
+
+# Register the alias
+Add-Content -Path $PROFILE -Value 'function cry { claude-remote-yolo @args }'
+```
+
+> Open a new terminal and you're good to go: `cry "summarize this repository"`
+
+## Development
 
 ```bash
+# Install dependencies
 pnpm install
+
+# Run all checks (lint + test + build)
 pnpm check
+
+# Run locally
 node dist/bin.js "summarize this repository"
 ```
 
-## Design Notes
+### Scripts
 
-- This project intentionally wraps the public Claude CLI command instead of patching Claude's installed source files.
-- Execution is always normalized to `claude remote-control --permission-mode bypassPermissions`.
-- `--yolo` is accepted as a compatibility flag and ignored.
+| Command | Description |
+|---|---|
+| `pnpm build` | Build with tsup (CJS, Node 20) |
+| `pnpm lint` | ESLint with zero warnings |
+| `pnpm test` | Vitest with coverage |
+| `pnpm check` | Full pipeline: file-lines check → lint → test → build |
 
-## Quality Gates
+### Quality Gates
 
-- ESLint runs with zero warnings allowed.
-- Unit tests run with Vitest.
-- Coverage must remain at 100% for lines, functions, statements, and branches.
-- Repository files are checked to stay within the 450-line limit.
-- A pre-commit hook runs `pnpm check`.
+- ESLint — zero warnings allowed
+- Vitest — 100% coverage (lines, functions, statements, branches)
+- File line limit — 450 lines max per file
+- Pre-commit hook — runs `pnpm check` via [simple-git-hooks](https://github.com/toplenboren/simple-git-hooks)
+
+## Design Decisions
+
+- Wraps the public Claude CLI command — no patching of Claude's installed source files
+- `--yolo` flag is accepted for compatibility and silently ignored
+- Consent state is persisted per-user, not per-project
+
+## License
+
+[MIT](LICENSE)
